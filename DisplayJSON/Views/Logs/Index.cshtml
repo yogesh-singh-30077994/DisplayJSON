@@ -1,0 +1,173 @@
+﻿@model IEnumerable<DisplayJSON.Serializers.Log>;
+@{
+    ViewData["Title"] = "Logs";
+}
+
+<!-- Modal -->
+<div class="modal fade" id="logDataModal" tabindex="-1" aria-labelledby="logDataModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="logDataModalLabel">Log Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="ajax-logdata">
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="sr-only"></span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2>File: @ViewData["fileName"]</h2>
+
+<div class="mb-3">
+    <input type="text" class="form-control" id="search-table-input" placeholder="Enter search key" />
+</div>
+
+<table class="table table-bordered border-dark mx-auto" id="log-table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model!.Timestamp)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.Level)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.MessageTemplate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.Properties!.ClassName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.Properties!.MethodName)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.Properties!.LogDescription)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.Properties!.LogData)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model!.Properties!.CreateDate)
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var log in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => log!.Timestamp)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => log!.Level)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => log!.MessageTemplate)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => log!.Properties!.ClassName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => log!.Properties!.MethodName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => log!.Properties!.LogDescription)
+                </td>
+                <td>
+                    <button type="button" class="btn btn-primary" data-bs-guid="@log.guid" data-bs-toggle="modal" data-bs-target="#logDataModal">
+                        View
+                    </button>
+                </td>
+                @*<td>
+            <a asp-action="LogData" asp-route-guid="@log.guid">View</a>
+            </td>*@
+                <td>
+                    @Html.DisplayFor(modelItem => log!.Properties!.CreateDate)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@section Scripts {
+    <script src="~/js/excel-bootstrap-table-filter-bundle.js"></script>
+
+    <script>
+        $("#log-table").excelTableFilter();
+
+        document.querySelector("#logDataModal").addEventListener('show.bs.modal', event => {
+            // Button that triggered the modal
+            const button = event.relatedTarget
+            // Extract info from data-bs-* attributes
+            const guid = button.getAttribute('data-bs-guid')
+
+            // Add spinner to modal data
+            document.querySelector("#ajax-logdata").innerHTML = `
+            <div class="d-flex justify-content-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="sr-only"></span>
+                </div>
+            </div>
+            `;
+
+            $.ajax({
+                url: "@Url.Action("LogDataAjax")",
+                data: {
+                    guid: guid
+                },
+                success: (res) => {
+                    handleSuccess(res);
+                },
+                error: (err) => {
+                    console.log("Error occured");
+                    console.log(err);
+                }
+            })
+        })
+
+        function pad(num) {
+            return (num >= 10 ? '' : '0') + num;
+        }
+
+        const handleSuccess = (logData) => {
+            const arr = [];
+            Object.keys(logData).forEach(key => {
+                const htmlTemplateInner = `
+                <dt class="col-sm-4" style="word-wrap:break-word;">
+                    ${key}
+                </dt>
+                <dd class="col-sm-8" style="word-wrap:break-word;">
+                    ${logData[key]}
+                </dd>
+                `
+                arr.push(htmlTemplateInner);
+            })
+
+            const htmlTemplateInnerJoined = arr.join("");
+            const htmlTemplate = `<dl class="row">${htmlTemplateInnerJoined}</dl>`;
+            document.querySelector("#ajax-logdata").innerHTML = "";
+            $("#ajax-logdata").append($.parseHTML(htmlTemplate));
+        }
+
+        const searchTableInput = document.querySelector("#search-table-input");
+        searchTableInput.onkeyup = () => {
+            const val = searchTableInput.value.toLowerCase();
+            document.querySelectorAll("#log-table>tbody tr").forEach(row => {
+                if (row.textContent.toLowerCase().indexOf(val) > -1) {
+                    row.classList.remove("d-none");
+                } else {
+                    row.classList.add("d-none");
+                }
+            })
+        }
+    </script>
+}

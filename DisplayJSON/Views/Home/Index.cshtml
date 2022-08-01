@@ -1,0 +1,27 @@
+﻿@model DisplayJSON.ViewModels.LogViewModel
+
+@{
+    ViewData["Title"] = "Upload Log File";
+}
+
+@if (ViewData["fileName"] != null)
+{
+    <h2>File: @ViewData["fileName"]</h2>
+}
+
+<form enctype="multipart/form-data" method="post" asp-controller="Logs" asp-action="Upload">
+    <div class="my-3">
+        <label asp-for="logFile" class="form-label fw-bold"></label>
+        <input class="form-control" asp-for="logFile">
+        <span asp-validation-for="logFile" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.querySelector("#logFile").onchange = () => {
+            document.querySelector(".field-validation-error").classList.add("d-none");
+        }
+    </script>
+}
