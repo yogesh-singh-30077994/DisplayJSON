@@ -78,8 +78,7 @@ namespace DisplayJSON.Controllers
             return View("~/Views/Home/Index.cshtml", logViewModel);
         }
 
-        // Todo change method name
-        public IActionResult LogDataAjax(int? guid)
+        public IActionResult GetLogData(int? guid)
         {
             if (guid == null)
             {

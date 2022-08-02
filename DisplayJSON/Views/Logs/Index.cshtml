@@ -87,9 +87,6 @@
                         View
                     </button>
                 </td>
-                @*<td>
-            <a asp-action="LogData" asp-route-guid="@log.guid">View</a>
-            </td>*@
                 <td>
                     @Html.DisplayFor(modelItem => log!.Properties!.CreateDate)
                 </td>
@@ -120,7 +117,7 @@
             `;
 
             $.ajax({
-                url: "@Url.Action("LogDataAjax")",
+                url: "@Url.Action("GetLogData")",
                 data: {
                     guid: guid
                 },
